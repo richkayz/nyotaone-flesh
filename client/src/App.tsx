@@ -2,6 +2,7 @@ import DomainsPage from './components/DomainsPage';
 import Auth from './Auth';
 import { useState } from 'react';
 import SuperadminDashboard from './components/SuperadminDashboard';
+import CustomerManagement from './components/CustomerManagement';
 import {
   Inbox, Send, FileText, Archive, Trash2, ShieldAlert,
   Star, Search, Plus, Settings, HelpCircle, Menu,
@@ -137,7 +138,9 @@ function App() {
     setAuthToken(null);
     setCurrentUser(null);
   }
-  const [adminPage, setAdminPage] = useState<'dashboard' | 'domains'>('dashboard');
+  const [adminPage, setAdminPage] = useState<
+  'dashboard' | 'domains' | 'customers'
+>('dashboard');
   const [emails, setEmails] = useState<Email[]>(initialEmails);
   const [activeFolder, setActiveFolder] = useState('Inbox');
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
@@ -229,11 +232,23 @@ if (currentUser?.role === 'superadmin') {
     );
   }
 
+  if (adminPage === 'customers') {
   return (
-    <SuperadminDashboard
+    <CustomerManagement
+      authToken={authToken!}
+      onBack={() => setAdminPage('dashboard')}
+      onLogout={handleLogout}
+      onOpenDomains={() => setAdminPage('domains')}
+    />
+  );
+}
+
+  return (
+   <SuperadminDashboard
       currentUser={currentUser}
       onLogout={handleLogout}
       onOpenDomains={() => setAdminPage('domains')}
+      onOpenCustomers={() => setAdminPage('customers')}
     />
   );
 }

@@ -1,0 +1,246 @@
+.customers-admin-layout {
+  min-height: 100vh;
+}
+
+.customers-admin-main {
+  min-width: 0;
+}
+
+.customers-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 28px;
+  background: #fff;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.customers-topbar-title {
+  font-weight: 600;
+  color: #172b4d;
+}
+
+.customers-menu-button,
+.customers-profile,
+.customers-mobile-close {
+  display: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.customers-main-content {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 65px);
+  padding: 28px;
+}
+
+.customers-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.customers-heading h1 {
+  margin: 18px 0 8px;
+  color: #172b4d;
+  font-size: 28px;
+}
+
+.customers-heading p {
+  margin: 0;
+  color: #64748b;
+}
+
+.customers-page-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding: 24px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.customers-edit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid #dbe4f0;
+  border-radius: 7px;
+  background: white;
+  color: #245be8;
+  cursor: pointer;
+}
+
+.customers-edit-button:hover {
+  background: #eff6ff;
+}
+
+.customers-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.customers-modal {
+  width: 100%;
+  max-width: 520px;
+  padding: 26px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.customers-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.customers-modal-header h2 {
+  margin: 0 0 6px;
+}
+
+.customers-modal-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.customers-modal-header button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.customers-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.customers-modal input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #dbe4f0;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.customers-modal input:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.customers-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.customers-cancel-button,
+.customers-save-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.customers-cancel-button {
+  border: 1px solid #dbe4f0;
+  background: white;
+}
+
+.customers-save-button {
+  border: 0;
+  background: #2563eb;
+  color: white;
+}
+
+.customers-save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .customers-admin-layout {
+    display: block;
+  }
+
+  .customers-admin-layout .admin-sidebar {
+    position: fixed;
+    z-index: 1001;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .customers-admin-layout .admin-sidebar.customers-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .customers-menu-button,
+  .customers-mobile-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .customers-topbar {
+    padding: 14px 18px;
+  }
+
+  .customers-main-content {
+    padding: 18px;
+  }
+
+  .customers-heading {
+    align-items: flex-start;
+  }
+
+  .customers-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .customers-table {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 600px) {
+  .customers-heading {
+    flex-direction: column;
+  }
+
+  .customers-page-footer {
+    flex-direction: column;
+  }
+
+  .customers-modal {
+    padding: 20px;
+  }
+}

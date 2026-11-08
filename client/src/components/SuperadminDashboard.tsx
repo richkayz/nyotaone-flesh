@@ -20,6 +20,7 @@ type SuperadminDashboardProps = {
   currentUser: any;
   onLogout: () => void;
   onOpenDomains: () => void;
+  onOpenCustomers: () => void;
 };
 
 const dashboardItems = [
@@ -74,6 +75,7 @@ export default function SuperadminDashboard({
   currentUser,
   onLogout,
   onOpenDomains,
+  onOpenCustomers,
 }: SuperadminDashboardProps) {
   const name =
     currentUser?.full_name ||
@@ -115,11 +117,16 @@ export default function SuperadminDashboard({
               className="admin-nav-item"
               key={item.title}
               onClick={
-                item.title === 'Domains'
-                  ? onOpenDomains
-                  : undefined
-              }
-              disabled={item.title !== 'Domains'}
+                  item.title === 'Domains'
+                    ? onOpenDomains
+                    : item.title === 'Customers & Accounts'
+                      ? onOpenCustomers
+                      : undefined
+                }
+                disabled={
+                  item.title !== 'Domains' &&
+                  item.title !== 'Customers & Accounts'
+                }
             >
               <Icon size={18} />
               {item.title}
@@ -179,16 +186,24 @@ export default function SuperadminDashboard({
             {dashboardItems.map((item) => {
               const Icon = item.icon;
               const isDomains = item.title === 'Domains';
+              const isCustomers = item.title === 'Customers & Accounts';
+              const isEnabled = isDomains || isCustomers;
 
               return (
                 <button
                   type="button"
                   className="admin-card"
                   key={item.title}
-                  onClick={isDomains ? onOpenDomains : undefined}
-                  disabled={!isDomains}
+                 onClick={
+                    isDomains
+                      ? onOpenDomains
+                      : isCustomers
+                        ? onOpenCustomers
+                        : undefined
+                  }
+                  disabled={!isEnabled}
                   style={{
-                    cursor: isDomains ? 'pointer' : 'default',
+                    cursor: isEnabled ? 'pointer' : 'default',
                     textAlign: 'left',
                     font: 'inherit',
                   }}

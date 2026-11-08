@@ -8,7 +8,7 @@
 }
 
 .admin-sidebar {
-  width: 250px;
+  width: 255px;
   flex-shrink: 0;
   background: #101b35;
   color: #dbe4f3;
@@ -41,7 +41,7 @@
 .admin-sidebar-label {
   font-size: 10px;
   letter-spacing: 1.2px;
-  color: #8493af;
+  color: #94a3b8;
   margin: 20px 10px 10px;
 }
 
@@ -49,12 +49,30 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 12px;
+  border: 1px solid transparent;
   border-radius: 8px;
+  background: transparent;
   font-size: 13px;
-  margin-bottom: 4px;
-  color: #c5d0e2;
+  margin-bottom: 5px;
+  color: #dbe4f3;
   cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-nav-item:hover:not(:disabled) {
+  background: #1e2c49;
+  color: #ffffff;
+}
+
+.admin-nav-item:disabled {
+  opacity: 1;
+  color: #dbe4f3;
+  cursor: default;
 }
 
 .admin-nav-item.active {
@@ -69,7 +87,7 @@
   gap: 12px;
   border: 0;
   background: transparent;
-  color: #c5d0e2;
+  color: #dbe4f3;
   padding: 12px;
   cursor: pointer;
   font-size: 13px;
@@ -92,12 +110,13 @@
 .admin-header h1 {
   margin: 0 0 8px;
   font-size: 25px;
+  color: #172033;
 }
 
 .admin-header p,
 .admin-section-heading p {
   margin: 0;
-  color: #68758b;
+  color: #52627a;
   font-size: 13px;
 }
 
@@ -122,10 +141,11 @@
 .admin-user span {
   display: block;
   font-size: 12px;
+  color: #172033;
 }
 
 .admin-user span {
-  color: #68758b;
+  color: #52627a;
   margin-top: 4px;
 }
 
@@ -143,11 +163,12 @@
 .admin-welcome h2 {
   margin: 0 0 10px;
   font-size: 21px;
+  color: #ffffff;
 }
 
 .admin-welcome p {
   margin: 0;
-  color: #d3e1f7;
+  color: #e2eaf8;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -159,6 +180,7 @@
 .admin-section-heading h2 {
   font-size: 18px;
   margin: 0 0 7px;
+  color: #172033;
 }
 
 .admin-grid {
@@ -169,15 +191,23 @@
 
 .admin-card {
   background: white;
-  border: 1px solid #e5eaf2;
+  border: 1px solid #e1e7f0;
   border-radius: 12px;
   padding: 22px;
   position: relative;
   min-height: 150px;
+  color: #172033;
+  opacity: 1;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.admin-card:hover {
+.admin-card:disabled {
+  opacity: 1;
+  color: #172033;
+  cursor: default;
+}
+
+.admin-card:hover:not(:disabled) {
   box-shadow: 0 8px 25px rgba(20, 40, 80, 0.08);
   transform: translateY(-2px);
 }
@@ -196,10 +226,11 @@
 .admin-card h3 {
   font-size: 14px;
   margin: 0 0 8px;
+  color: #172033;
 }
 
 .admin-card p {
-  color: #68758b;
+  color: #52627a;
   font-size: 12px;
   line-height: 1.5;
   margin: 0;
@@ -209,12 +240,12 @@
   position: absolute;
   top: 22px;
   right: 20px;
-  color: #8a96a9;
+  color: #718096;
 }
 
 .admin-footer {
   margin-top: 35px;
-  color: #8a96a9;
+  color: #718096;
   font-size: 12px;
 }
 

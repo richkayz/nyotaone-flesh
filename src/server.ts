@@ -1,15 +1,31 @@
+
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
+
 import { testDatabaseConnection } from './database/db.js';
 import authRoutes from './routes/auth.js';
 import pleskRoutes from './routes/plesk.js';
+import customerRoutes from './routes/customers.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
+
 app.use('/api/auth', authRoutes);
 app.use('/api/plesk', pleskRoutes);
+app.use('/api/customers', customerRoutes);
 
 app.get('/api/health', async (_req, res) => {
   try {

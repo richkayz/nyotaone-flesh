@@ -9,6 +9,7 @@ export const db = mariadb.createPool({
   password: process.env.DB_PASSWORD,
   connectionLimit: 5,
   acquireTimeout: 10000,
+  connectTimeout: 10000,
   charset: 'utf8mb4',
 });
 
