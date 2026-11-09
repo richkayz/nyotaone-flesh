@@ -7,10 +7,12 @@ import { testDatabaseConnection } from './database/db.js';
 import authRoutes from './routes/auth.js';
 import pleskRoutes from './routes/plesk.js';
 import customerRoutes from './routes/customers.js';
+import helmet from 'helmet';
 
 const app = express();
-const PORT = Number(process.env.PORT || 3000);
 
+const PORT = Number(process.env.PORT || 3000);
+app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:5173',
