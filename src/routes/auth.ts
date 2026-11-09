@@ -3,8 +3,18 @@ import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { db } from '../database/db.js';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    message: 'Too many login attempts. Please try again after 15 minutes.',
+  },
+});
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -166,7 +176,7 @@ export function requireRoles(...allowedRoles: UserRole[]) {
  * The email field also accepts a username for compatibility with the
  * existing frontend login form.
  */
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', loginLimiter, async (req: Request, res: Response) => {
   const identifier = normalizeIdentifier(req.body?.username ?? req.body?.email);
   const password = req.body?.password;
 
