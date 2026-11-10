@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -12,6 +11,7 @@ import {
   LogOut,
   Server,
   ArrowUpRight,
+  ShieldCheck,
 } from 'lucide-react';
 
 import './SuperadminDashboard.css';
@@ -21,6 +21,8 @@ type SuperadminDashboardProps = {
   onLogout: () => void;
   onOpenDomains: () => void;
   onOpenCustomers: () => void;
+  onOpenUsers: () => void;
+  onOpenRoles: () => void;
 };
 
 const dashboardItems = [
@@ -28,6 +30,16 @@ const dashboardItems = [
     title: 'Customers & Accounts',
     description: 'Manage customer accounts and users',
     icon: Users,
+  },
+  {
+    title: 'Users & Roles',
+    description: 'Create staff accounts and manage user access',
+    icon: Users,
+  },
+  {
+    title: 'Roles & Permissions',
+    description: 'Control what each staff role can access',
+    icon: ShieldCheck,
   },
   {
     title: 'Domains',
@@ -76,11 +88,45 @@ export default function SuperadminDashboard({
   onLogout,
   onOpenDomains,
   onOpenCustomers,
+  onOpenUsers,
+  onOpenRoles,
 }: SuperadminDashboardProps) {
   const name =
     currentUser?.full_name ||
     currentUser?.fullName ||
     'Administrator';
+
+  function handleNavigation(title: string) {
+    switch (title) {
+      case 'Domains':
+        onOpenDomains();
+        break;
+
+      case 'Customers & Accounts':
+        onOpenCustomers();
+        break;
+
+      case 'Users & Roles':
+        onOpenUsers();
+        break;
+
+      case 'Roles & Permissions':
+        onOpenRoles();
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  function isEnabled(title: string) {
+    return [
+      'Domains',
+      'Customers & Accounts',
+      'Users & Roles',
+      'Roles & Permissions',
+    ].includes(title);
+  }
 
   return (
     <div className="admin-dashboard">
@@ -110,23 +156,16 @@ export default function SuperadminDashboard({
 
         {dashboardItems.map((item) => {
           const Icon = item.icon;
+          const enabled = isEnabled(item.title);
 
           return (
             <button
               type="button"
               className="admin-nav-item"
               key={item.title}
-              onClick={
-                  item.title === 'Domains'
-                    ? onOpenDomains
-                    : item.title === 'Customers & Accounts'
-                      ? onOpenCustomers
-                      : undefined
-                }
-                disabled={
-                  item.title !== 'Domains' &&
-                  item.title !== 'Customers & Accounts'
-                }
+              onClick={() => handleNavigation(item.title)}
+              disabled={!enabled}
+              title={!enabled ? 'Coming soon' : item.title}
             >
               <Icon size={18} />
               {item.title}
@@ -134,7 +173,11 @@ export default function SuperadminDashboard({
           );
         })}
 
-        <button className="admin-logout" onClick={onLogout}>
+        <button
+          type="button"
+          className="admin-logout"
+          onClick={onLogout}
+        >
           <LogOut size={18} />
           Sign out
         </button>
@@ -166,8 +209,8 @@ export default function SuperadminDashboard({
             <h2>Welcome back, {name}</h2>
 
             <p>
-              Your central workspace for customers, domains,
-              services, billing and support.
+              Your central workspace for customers, users,
+              roles, permissions, domains, services, billing and support.
             </p>
           </div>
 
@@ -185,28 +228,21 @@ export default function SuperadminDashboard({
           <div className="admin-grid">
             {dashboardItems.map((item) => {
               const Icon = item.icon;
-              const isDomains = item.title === 'Domains';
-              const isCustomers = item.title === 'Customers & Accounts';
-              const isEnabled = isDomains || isCustomers;
+              const enabled = isEnabled(item.title);
 
               return (
                 <button
                   type="button"
                   className="admin-card"
                   key={item.title}
-                 onClick={
-                    isDomains
-                      ? onOpenDomains
-                      : isCustomers
-                        ? onOpenCustomers
-                        : undefined
-                  }
-                  disabled={!isEnabled}
+                  onClick={() => handleNavigation(item.title)}
+                  disabled={!enabled}
                   style={{
-                    cursor: isEnabled ? 'pointer' : 'default',
+                    cursor: enabled ? 'pointer' : 'default',
                     textAlign: 'left',
                     font: 'inherit',
                   }}
+                  title={!enabled ? 'Coming soon' : item.title}
                 >
                   <div className="admin-card-icon">
                     <Icon size={21} />

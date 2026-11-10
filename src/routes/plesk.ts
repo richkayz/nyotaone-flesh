@@ -114,12 +114,13 @@ router.put(
         return;
       }
 
-      const { name, company, email } = req.body;
+      const { name, company, email, phone } = req.body;
 
-      if (
+        if (
         name === undefined &&
         company === undefined &&
-        email === undefined
+        email === undefined &&
+        phone === undefined
       ) {
         res.status(400).json({
           success: false,
@@ -133,11 +134,15 @@ router.put(
       if (name !== undefined) updates.name = name;
       if (company !== undefined) updates.company = company;
       if (email !== undefined) updates.email = email;
+      if (phone !== undefined) updates.phone = phone;
 
       const updatedCustomer = await updatePleskCustomer(
         customerId,
         updates
       );
+
+      console.log('Plesk update payload:', updates);
+      console.log('Plesk update response:', updatedCustomer);
 
       res.json({
         success: true,

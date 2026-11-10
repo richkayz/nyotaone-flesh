@@ -1,8 +1,10 @@
+import UserManagement from './components/UserManagement';
 import DomainsPage from './components/DomainsPage';
 import Auth from './Auth';
 import { useState } from 'react';
 import SuperadminDashboard from './components/SuperadminDashboard';
 import CustomerManagement from './components/CustomerManagement';
+import RoleManagement from './components/RoleManagement';
 import {
   Inbox, Send, FileText, Archive, Trash2, ShieldAlert,
   Star, Search, Plus, Settings, HelpCircle, Menu,
@@ -138,8 +140,8 @@ function App() {
     setAuthToken(null);
     setCurrentUser(null);
   }
-  const [adminPage, setAdminPage] = useState<
-  'dashboard' | 'domains' | 'customers'
+ const [adminPage, setAdminPage] = useState<
+  'dashboard' | 'domains' | 'customers' | 'users' | 'roles'
 >('dashboard');
   const [emails, setEmails] = useState<Email[]>(initialEmails);
   const [activeFolder, setActiveFolder] = useState('Inbox');
@@ -243,14 +245,34 @@ if (currentUser?.role === 'superadmin') {
   );
 }
 
+if (adminPage === 'users') {
   return (
-   <SuperadminDashboard
-      currentUser={currentUser}
-      onLogout={handleLogout}
-      onOpenDomains={() => setAdminPage('domains')}
-      onOpenCustomers={() => setAdminPage('customers')}
+    <UserManagement
+      authToken={authToken!}
+      onBack={() => setAdminPage('dashboard')}
     />
   );
+}
+
+if (adminPage === 'roles') {
+  return (
+    <RoleManagement
+      authToken={authToken!}
+      onBack={() => setAdminPage('dashboard')}
+    />
+  );
+}
+
+  const dashboardProps = {
+    currentUser,
+    onLogout: handleLogout,
+    onOpenDomains: () => setAdminPage('domains'),
+    onOpenCustomers: () => setAdminPage('customers'),
+    onOpenUsers: () => setAdminPage('users'),
+    onOpenRoles: () => setAdminPage('roles'),
+  };
+
+  return <SuperadminDashboard {...dashboardProps} />;
 }
 
   return (

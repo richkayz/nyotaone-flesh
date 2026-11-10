@@ -16,7 +16,7 @@ async function inspectTables() {
     console.table(tables);
 
     // Inspect authentication and customer relationship
-    for (const table of ['users', 'accounts', 'customer_profiles']) {
+    for (const table of ['users', 'accounts', 'customer_profiles', 'audit_logs']) {
       try {
         const columns = await connection.query(
           `DESCRIBE ${table}`

@@ -141,7 +141,8 @@ export default function CustomerManagement({
             name: selectedCustomer.name,
             company: selectedCustomer.company,
             email: selectedCustomer.email,
-            }),
+            phone: selectedCustomer.phone,
+          }),
         }
       );
 
@@ -283,12 +284,17 @@ export default function CustomerManagement({
           </div>
 
           <section className="customers-content">
-            <div className="customers-toolbar">
-              <div>
-                <h2>Customer Accounts</h2>
-                <p>{customers.length} customer records</p>
-              </div>
+           <div className="customers-toolbar">
+            <div>
+              <h2>Customer Accounts</h2>
+              <p>Customer records retrieved from Plesk</p>
             </div>
+
+            <div className="customers-total">
+              <span>Total Customers</span>
+              <strong>{customers.length}</strong>
+            </div>
+          </div>
 
             <form
               className="customers-search"
@@ -346,9 +352,18 @@ export default function CustomerManagement({
                         key={customer.id ?? customer.login ?? index}
                       >
                         <td>
-                          <strong>
-                            {customer.name || '—'}
-                          </strong>
+                          <div className="customers-identity">
+                            <div className="customers-avatar">
+                              {(customer.name || customer.company || 'C')
+                                .trim()
+                                .split(/\s+/)
+                                .slice(0, 2)
+                                .map((part) => part.charAt(0).toUpperCase())
+                                .join('')}
+                            </div>
+
+                            <strong>{customer.name || 'Unnamed Customer'}</strong>
+                          </div>
                         </td>
 
                         <td>{customer.company || '—'}</td>
@@ -357,9 +372,23 @@ export default function CustomerManagement({
                         <td>{customer.login || '—'}</td>
 
                         <td>
-                          <span className="customers-status">
-                            {customer.status || 'Unknown'}
-                          </span>
+                          
+                        <span
+                          className={`customers-status ${
+                            Number(customer.status) === 0
+                              ? 'status-active'
+                              : Number(customer.status) === 1
+                              ? 'status-inactive'
+                              : 'status-unknown'
+                          }`}
+                        >
+                          {Number(customer.status) === 0
+                            ? 'Active'
+                            : Number(customer.status) === 1
+                            ? 'Inactive'
+                            : 'Unknown'}
+                        </span>
+
                         </td>
 
                         <td>

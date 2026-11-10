@@ -166,6 +166,58 @@ export function requireRoles(...allowedRoles: UserRole[]) {
   };
 }
 
+
+
+export function requirePermission(permissionKey: string) {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (!req.authUser) {
+      return res.status(401).json({
+        message: 'Authentication required.',
+      });
+    }
+
+    if (req.authUser.role === 'superadmin') {
+      return next();
+    }
+
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+
+      const permissions = await connection.query(
+        `SELECT rp.permission_key
+         FROM role_permissions rp
+         WHERE rp.role = ?
+           AND rp.permission_key = ?
+         LIMIT 1`,
+        [req.authUser.role, permissionKey]
+      );
+
+      if (permissions.length === 0) {
+        return res.status(403).json({
+          message: 'You do not have permission to perform this action.',
+        });
+      }
+
+      return next();
+    } catch (error) {
+      console.error('Permission check failed:', error);
+
+      return res.status(500).json({
+        message: 'Could not verify your permissions.',
+      });
+    } finally {
+      if (connection) connection.release();
+    }
+  };
+}
+
+
 /**
  * POST /login
  * Accepts either:
@@ -338,6 +390,57 @@ router.get(
 );
 
 /**
+ * GET /users
+ * List all users for Superadmin user management.
+ */
+router.get(
+  '/users',
+  requireAuth,
+  requireRoles('superadmin'),
+  async (_req: AuthenticatedRequest, res: Response) => {
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+
+      const users = await connection.query(
+        `SELECT
+           id,
+           full_name,
+           username,
+           email,
+           phone,
+           role,
+           is_active,
+           account_id
+         FROM users
+         ORDER BY full_name ASC`
+      );
+
+      return res.json({
+        users: users.map((user: any) => ({
+          id: String(user.id),
+          fullName: String(user.full_name),
+          username: user.username ? String(user.username) : null,
+          email: String(user.email),
+          phone: String(user.phone ?? ''),
+          role: String(user.role),
+          isActive: Number(user.is_active) === 1,
+          accountId: user.account_id ? String(user.account_id) : null,
+        })),
+      });
+    } catch (error) {
+      console.error('Loading users failed:', error);
+      return res.status(500).json({
+        message: 'Could not load users.',
+      });
+    } finally {
+      if (connection) connection.release();
+    }
+  }
+);
+
+/**
  * POST /users
  * Create a user from the authenticated admin area.
  *
@@ -483,5 +586,347 @@ router.post(
     }
   }
 );
+
+
+/**
+ * PUT /users/:id
+ * Update an existing non-superadmin user.
+ */
+router.put(
+  '/users/:id',
+  requireAuth,
+  requireRoles('superadmin'),
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.params.id;
+
+    const fullName =
+      typeof req.body?.fullName === 'string'
+        ? req.body.fullName.trim()
+        : '';
+
+    const username = normalizeIdentifier(req.body?.username);
+    const email = normalizeIdentifier(req.body?.email);
+    const phone =
+      typeof req.body?.phone === 'string' ? req.body.phone.trim() : '';
+    const requestedRole = req.body?.role;
+    const accountIdInput = req.body?.accountId;
+
+    if (!fullName || !email || !email.includes('@')) {
+      return res.status(400).json({
+        message: 'A valid full name and email address are required.',
+      });
+    }
+
+    if (username && username.length < 3) {
+      return res.status(400).json({
+        message: 'Username must contain at least 3 characters.',
+      });
+    }
+
+    if (!isUserRole(requestedRole) || requestedRole === 'superadmin') {
+      return res.status(400).json({
+        message: 'A valid non-superadmin role is required.',
+      });
+    }
+
+    const role = requestedRole as UserRole;
+    let accountId: number | null = null;
+
+    if (accountIdInput !== undefined && accountIdInput !== null && accountIdInput !== '') {
+      accountId = Number(accountIdInput);
+
+      if (!Number.isSafeInteger(accountId) || accountId <= 0) {
+        return res.status(400).json({ message: 'Invalid account ID.' });
+      }
+    }
+
+    if (role !== 'customer' && accountId !== null) {
+      return res.status(400).json({
+        message: 'Staff users must not be linked to a customer account.',
+      });
+    }
+
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+
+      const existingUsers = await connection.query(
+        'SELECT id, role FROM users WHERE id = ? LIMIT 1',
+        [userId]
+      );
+
+      if (existingUsers.length === 0) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      if (existingUsers[0].role === 'superadmin') {
+        return res.status(403).json({
+          message: 'Superadmin accounts cannot be edited here.',
+        });
+      }
+
+      if (accountId !== null) {
+        const accounts = await connection.query(
+          'SELECT id FROM accounts WHERE id = ? LIMIT 1',
+          [accountId]
+        );
+
+        if (accounts.length === 0) {
+          return res.status(400).json({
+            message: 'The selected customer account does not exist.',
+          });
+        }
+      }
+
+      await connection.query(
+        `UPDATE users
+         SET full_name = ?,
+             username = ?,
+             email = ?,
+             phone = ?,
+             role = ?,
+             account_id = ?
+         WHERE id = ?`,
+        [
+          fullName,
+          username || null,
+          email,
+          phone,
+          role,
+          accountId,
+          userId,
+        ]
+      );
+
+      return res.json({ message: 'User updated successfully.' });
+    } catch (error: any) {
+      if (error?.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({
+          message: 'That username or email is already in use.',
+        });
+      }
+
+      console.error('User update failed:', error);
+      return res.status(500).json({
+        message: 'Could not update the user.',
+      });
+    } finally {
+      if (connection) connection.release();
+    }
+  }
+);
+
+/**
+ * PATCH /users/:id/status
+ * Activate or deactivate a user.
+ */
+router.patch(
+  '/users/:id/status',
+  requireAuth,
+  requireRoles('superadmin'),
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.params.id;
+    const isActive = req.body?.isActive;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        message: 'A valid account status is required.',
+      });
+    }
+
+    if (userId === req.authUser!.id && !isActive) {
+      return res.status(403).json({
+        message: 'You cannot deactivate your own account.',
+      });
+    }
+
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+
+      const existingUsers = await connection.query(
+        'SELECT id, role FROM users WHERE id = ? LIMIT 1',
+        [userId]
+      );
+
+      if (existingUsers.length === 0) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      if (existingUsers[0].role === 'superadmin') {
+        return res.status(403).json({
+          message: 'Superadmin accounts cannot be deactivated here.',
+        });
+      }
+
+      await connection.query(
+        'UPDATE users SET is_active = ? WHERE id = ?',
+        [isActive ? 1 : 0, userId]
+      );
+
+      return res.json({
+        message: isActive
+          ? 'User activated successfully.'
+          : 'User deactivated successfully.',
+        isActive,
+      });
+    } catch (error) {
+      console.error('User status update failed:', error);
+      return res.status(500).json({
+        message: 'Could not update user status.',
+      });
+    } finally {
+      if (connection) connection.release();
+    }
+  }
+);
+
+
+
+const MANAGEABLE_ROLES: UserRole[] = [
+  'admin',
+  'finance',
+  'sales',
+  'inventory',
+  'support',
+  'editor',
+  'customer',
+];
+
+/**
+ * GET /roles/permissions
+ * Returns all available permissions and their role assignments.
+ */
+router.get(
+  '/roles/permissions',
+  requireAuth,
+  requireRoles('superadmin'),
+  async (_req: AuthenticatedRequest, res: Response) => {
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+
+      const permissions = await connection.query(
+        `SELECT permission_key, permission_name, module, description
+         FROM permissions
+         ORDER BY module, permission_name`
+      );
+
+      const assignments = await connection.query(
+        `SELECT role, permission_key
+         FROM role_permissions
+         ORDER BY role, permission_key`
+      );
+
+      return res.json({
+        permissions,
+        roles: MANAGEABLE_ROLES.map(role => ({
+          role,
+          permissions: assignments
+            .filter((item: any) => item.role === role)
+            .map((item: any) => item.permission_key),
+        })),
+      });
+    } catch (error) {
+      console.error('Loading role permissions failed:', error);
+      return res.status(500).json({
+        message: 'Could not load role permissions.',
+      });
+    } finally {
+      if (connection) connection.release();
+    }
+  }
+);
+
+/**
+ * PUT /roles/:role/permissions
+ * Replace the permissions assigned to a role.
+ */
+router.put(
+  '/roles/:role/permissions',
+  requireAuth,
+  requireRoles('superadmin'),
+  async (req: AuthenticatedRequest, res: Response) => {
+    const role = req.params.role as UserRole;
+    const permissionKeys = req.body?.permissions;
+
+    if (!MANAGEABLE_ROLES.includes(role)) {
+      return res.status(400).json({
+        message: 'Invalid or protected role.',
+      });
+    }
+
+    if (
+      !Array.isArray(permissionKeys) ||
+      !permissionKeys.every(
+        (key: unknown) => typeof key === 'string'
+      ) ||
+      new Set(permissionKeys).size !== permissionKeys.length
+    ) {
+      return res.status(400).json({
+        message: 'Provide a valid list of unique permission keys.',
+      });
+    }
+
+    let connection;
+
+    try {
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+
+      if (permissionKeys.length > 0) {
+        const placeholders = permissionKeys.map(() => '?').join(', ');
+
+        const validPermissions = await connection.query(
+          `SELECT permission_key
+           FROM permissions
+           WHERE permission_key IN (${placeholders})`,
+          permissionKeys
+        );
+
+        if (validPermissions.length !== permissionKeys.length) {
+          await connection.rollback();
+          return res.status(400).json({
+            message: 'One or more permission keys are invalid.',
+          });
+        }
+      }
+
+      await connection.query(
+        'DELETE FROM role_permissions WHERE role = ?',
+        [role]
+      );
+
+      for (const permissionKey of permissionKeys) {
+        await connection.query(
+          `INSERT INTO role_permissions (role, permission_key)
+           VALUES (?, ?)`,
+          [role, permissionKey]
+        );
+      }
+
+      await connection.commit();
+
+      return res.json({
+        message: `Permissions updated for ${role}.`,
+        role,
+        permissions: permissionKeys,
+      });
+    } catch (error) {
+      if (connection) await connection.rollback();
+
+      console.error('Updating role permissions failed:', error);
+      return res.status(500).json({
+        message: 'Could not update role permissions.',
+      });
+    } finally {
+      if (connection) connection.release();
+    }
+  }
+);
+
 
 export default router;
